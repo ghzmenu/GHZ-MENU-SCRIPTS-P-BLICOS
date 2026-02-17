@@ -2,6 +2,7 @@
 ══════════════════════════════════════════════════════════════════
     AIMLOCK UNIVERSAL - ATIVAR
     ✅ ATIVA O AIMLOCK
+    ✅ Sem time checker - grudar em qualquer um dentro do FOV
     ✅ Executa o script completo
 ══════════════════════════════════════════════════════════════════
 ]]--
@@ -14,19 +15,16 @@ local RunService = game:GetService("RunService")
 -- ✅ SISTEMA DE DETECÇÃO E LIMPEZA DE AIMBOT EXISTENTE
 local function destroyExistingAimbot()
     if _G.AimlockConn and _G.AimlockConn.Connected then
-        print("🗑️ Desconectando Aimlock anterior...")
         _G.AimlockConn:Disconnect()
         _G.AimlockConn = nil
     end
     
     if _G.aimlockConnection and _G.aimlockConnection.Connected then
-        print("🗑️ Desconectando Aimlock anterior (conexão alternativa)...")
         _G.aimlockConnection:Disconnect()
         _G.aimlockConnection = nil
     end
     
     if _G.aimbotConnection and _G.aimbotConnection.Connected then
-        print("🗑️ Desconectando Aimbot anterior...")
         _G.aimbotConnection:Disconnect()
         _G.aimbotConnection = nil
     end
@@ -35,7 +33,6 @@ local function destroyExistingAimbot()
     if playerGui then
         local oldGui = playerGui:FindFirstChild("AimlockFOV")
         if oldGui then
-            print("🗑️ Removendo GUI de FOV anterior...")
             oldGui:Destroy()
         end
     end
@@ -43,8 +40,6 @@ local function destroyExistingAimbot()
     _G.AimlockActive = false
     _G.aimlock = false
     _G.aimbot = false
-    
-    print("✅ Aimbot anterior removido com sucesso!")
 end
 
 destroyExistingAimbot()
@@ -182,12 +177,14 @@ local function isInFOV(targetPlayer)
     return distance <= _G.AimlockFOV
 end
 
+-- ✅ FUNÇÃO ALTERADA: SEM TIME CHECKER - GRUDAR EM QUALQUER UM
 local function getClosestTarget()
     local closestDist = math.huge
     local target = nil
     
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and plr.Team ~= LocalPlayer.Team and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+        -- ✅ REMOVIDO: and plr.Team ~= LocalPlayer.Team
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             
             if isInFOV(plr) then
                 local screenPos, onScreen = Camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
@@ -281,40 +278,26 @@ end)
 
 _G.setAimlockFOV = function(newFOV)
     _G.AimlockFOV = math.max(50, math.min(500, newFOV))
-    print("📍 FOV alterado para: " .. _G.AimlockFOV)
 end
 
 _G.increaseAimlockFOV = function(amount)
     _G.AimlockFOV = math.max(50, math.min(500, _G.AimlockFOV + amount))
-    print("📍 FOV aumentado para: " .. _G.AimlockFOV)
 end
 
 _G.decreaseAimlockFOV = function(amount)
     _G.AimlockFOV = math.max(50, math.min(500, _G.AimlockFOV - amount))
-    print("📍 FOV diminuído para: " .. _G.AimlockFOV)
 end
 
 _G.setFOVOffsetY = function(offset)
     _G.FOVOffsetY = offset
-    print("📍 Offset Y do FOV alterado para: " .. _G.FOVOffsetY)
 end
 
 _G.setAimlockStrength = function(strength)
     _G.AimlockStrength = math.max(0.01, math.min(1, strength))
-    print("💪 Força base do Aimlock alterada para: " .. _G.AimlockStrength)
 end
 
 _G.setAimlockStrengthFOV = function(strength)
     _G.AimlockStrengthFOV = math.max(0.01, math.min(1, strength))
-    print("💪 Força FOV do Aimlock alterada para: " .. _G.AimlockStrengthFOV)
 end
 
-print("═══════════════════════════════════════════════════")
-print("✅ AIMLOCK UNIVERSAL ATIVADO!")
-print("═══════════════════════════════════════════════════")
-print("📍 FOV: " .. _G.AimlockFOV)
-print("💪 Força: " .. _G.AimlockStrength .. " / " .. _G.AimlockStrengthFOV)
-print("🎯 Status: LIGADO ✅")
-print("════════════════════════════════════════════════════")
-print("Para DESATIVAR, execute o script OFF")
-print("════════════════════════════════════════════════════")
+print("AIMLOCK UNIVERSAL ATIVADO")
