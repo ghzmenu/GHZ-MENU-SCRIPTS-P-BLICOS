@@ -1,11 +1,7 @@
 --[[
 ══════════════════════════════════════════════════════════════════
-    ESP DISTÂNCIA - FIXO ACIMA DO ESP NAME
-    ✅ Mesmo sistema do ESP NAME
-    ✅ Sempre na mesma posição relativa
-    ✅ Sem bug de distância
-    ✅ Sincronizado perfeitamente
-    ✅ Cor do time (igual ESP NAME)
+    ATIVAR ESP DISTÂNCIA
+    ✅ Script para ATIVAR o ESP Distância
 ══════════════════════════════════════════════════════════════════
 ]]--
 
@@ -58,7 +54,6 @@ local function GetTeamColor(player)
     return Color3.fromRGB(255, 255, 255)
 end
 
--- MESMA FUNÇÃO DO ESP NAME
 local function GetSizeByDistance(distance)
     local size = math.max(0.5, 2 - (distance / 200))
     return size
@@ -96,26 +91,18 @@ local function UpdateDistanciaESP(espData)
         return true
     end
     
-    -- USA A MESMA FÓRMULA DE TAMANHO DO ESP NAME
     local sizeMultiplier = GetSizeByDistance(distance)
     
-    -- Formata a distância em metros
     local distanciaTexto = string.format("%.0f", distance)
     espData.Label.Text = "Distância: " .. distanciaTexto .. "m"
     
-    -- MESMO TAMANHO QUE O ESP NAME
     espData.Label.Size = UDim2.new(0, 40 * sizeMultiplier, 0, 12 * sizeMultiplier)
     
-    -- POSIÇÃO: EXATAMENTE COMO O ESP NAME, MAS 15 PIXELS ACIMA
-    -- screenPosition.X - (20 * sizeMultiplier) = centraliza horizontalmente
-    -- screenPosition.Y - (6 * sizeMultiplier) = posição Y do ESP NAME
-    -- - 15 = 15 pixels acima do ESP NAME (espaço fixo)
     local xPos = screenPosition.X - (20 * sizeMultiplier)
     local yPos = screenPosition.Y - (6 * sizeMultiplier) - 15
     
     espData.Label.Position = UDim2.new(0, xPos, 0, yPos)
     
-    -- Cor do time
     espData.Label.TextColor3 = GetTeamColor(espData.Player)
     
     return true
@@ -149,23 +136,59 @@ for _, player in pairs(Players:GetPlayers()) do
     end
 end
 
-local updateConnection
-updateConnection = RunService.RenderStepped:Connect(function()
-    if not _G.ESPDistanciaActive then
-        updateConnection:Disconnect()
-        return
-    end
-    
-    for i = #_G.ESPDistanciaObjects, 1, -1 do
-        local espData = _G.ESPDistanciaObjects[i]
-        if not UpdateDistanciaESP(espData) then
-            table.remove(_G.ESPDistanciaObjects, i)
+if not _G.espDistanciaUpdateLoop then
+    _G.espDistanciaUpdateLoop = RunService.RenderStepped:Connect(function()
+        if not _G.ESPDistanciaActive then
+            return
         end
-    end
-end)
+        
+        for i = #_G.ESPDistanciaObjects, 1, -1 do
+            local espData = _G.ESPDistanciaObjects[i]
+            if not UpdateDistanciaESP(espData) then
+                table.remove(_G.ESPDistanciaObjects, i)
+            end
+        end
+    end)
+end
+
+if not _G.espDistanciaPlayerAdded then
+    _G.espDistanciaPlayerAdded = Players.PlayerAdded:Connect(function(player)
+        if player == LocalPlayer then return end
+        
+        task.wait(0.5)
+        
+        local function CreateESP()
+            if _G.ESPDistanciaActive and player.Character then
+                local espData = CreateDistanciaLabel(player)
+                if espData then
+                    table.insert(_G.ESPDistanciaObjects, espData)
+                end
+            end
+        end
+        
+        player.CharacterAdded:Connect(function()
+            task.wait(0.2)
+            CreateESP()
+        end)
+        
+        CreateESP()
+    end)
+end
+
+if not _G.espDistanciaPlayerRemoved then
+    _G.espDistanciaPlayerRemoved = Players.PlayerRemoving:Connect(function(player)
+        for i = #_G.ESPDistanciaObjects, 1, -1 do
+            if _G.ESPDistanciaObjects[i].Player == player then
+                if _G.ESPDistanciaObjects[i].Label then
+                    _G.ESPDistanciaObjects[i].Label:Destroy()
+                end
+                table.remove(_G.ESPDistanciaObjects, i)
+            end
+        end
+    end)
+end
 
 print("═══════════════════════════════════════════════════")
-print("✅ ESP DISTÂNCIA ATIVADO! (FIXO)")
-print("📍 Posicionado como ESP NAME")
-print("📏 Sem bug de distância")
+print("✅ ESP DISTÂNCIA ATIVADO!")
+print("📍 Mostrando distância acima do ESP NAME")
 print("═══════════════════════════════════════════════════")
