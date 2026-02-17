@@ -1,0 +1,45 @@
+--[[
+══════════════════════════════════════════════════════════════════
+    AIMLOCK UNIVERSAL - DESATIVAR
+    ❌ DESATIVA O AIMLOCK
+    ✅ Remove tudo com segurança
+══════════════════════════════════════════════════════════════════
+]]--
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+print("════════════════════════════════════════════════════")
+print("❌ DESATIVANDO AIMLOCK...")
+print("════════════════════════════════════════════════════")
+
+-- Desativa a flag
+_G.AimlockActive = false
+
+-- Desconecta a conexão
+if _G.AimlockConn and _G.AimlockConn.Connected then
+    print("🗑️ Desconectando loop de aimlock...")
+    _G.AimlockConn:Disconnect()
+    _G.AimlockConn = nil
+end
+
+-- Remove a GUI de FOV
+local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+if playerGui then
+    local fovGui = playerGui:FindFirstChild("AimlockFOV")
+    if fovGui then
+        print("🗑️ Removendo círculo de FOV...")
+        fovGui:Destroy()
+    end
+end
+
+-- Limpa variáveis globais
+_G.aimlock = false
+_G.aimbot = false
+
+print("════════════════════════════════════════════════════")
+print("✅ AIMLOCK DESATIVADO COM SUCESSO!")
+print("════════════════════════════════════════════════════")
+print("🎯 Status: DESLIGADO ❌")
+print("Para REATIVAR, execute o script ON")
+print("════════════════════════════════════════════════════")
