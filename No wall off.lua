@@ -1,38 +1,32 @@
 --[[
 ══════════════════════════════════════════════════════════════════
-    NO WALL - DESATIVAR (COM CHÃO)
-    ✅ RESTAURA AS ESTRUTURAS (MENOS O CHÃO)
-    ✅ Volta ao estado anterior
+    NO WALL - DESATIVAR (TELEPORT PARA OUTRO SERVIDOR)
+    ✅ DESATIVA O NOWALL
+    ✅ TELEPORTA PARA OUTRO SERVIDOR
+    ✅ REJOIN AUTOMÁTICO
 ══════════════════════════════════════════════════════════════════
 ]]--
 
-local workspace = workspace
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = Players.LocalPlayer
 
--- ✅ FUNÇÃO PARA RESTAURAR ESTRUTURAS
-local function restoreStructures()
-    if not _G.RemovedStructures or not next(_G.RemovedStructures) then
-        print("⚠️ Nenhuma estrutura foi removida!")
-        return
-    end
+-- ✅ DESATIVAR NO WALL
+_G.NoWallActive = false
+_G.RemovedStructures = {}
+_G.RemovedParts = {}
+
+-- ✅ TELEPORTAR PARA OUTRO SERVIDOR
+local function teleportToNewServer()
+    if not LocalPlayer then return end
     
-    local restoredCount = 0
+    local placeId = game.PlaceId -- Mesmo jogo
     
-    for structName, data in pairs(_G.RemovedStructures) do
-        -- Partes foram destruídas e não podem ser restauradas
-        -- Roblox não permite restaurar objetos deletados
-        restoredCount = restoredCount + 1
-    end
-    
-    print("✅ NO WALL DESATIVADO!")
-    print("🔄 Estruturas restauradas: " .. restoredCount)
-    
-    -- Limpar tabela
-    _G.RemovedStructures = {}
-    _G.RemovedParts = {}
-    _G.NoWallActive = false
+    pcall(function()
+        TeleportService:Teleport(placeId, LocalPlayer)
+        print("NOWALL DESATIVADO - TELEPORTANDO...")
+    end)
 end
 
--- ✅ EXECUTAR RESTAURAÇÃO
-restoreStructures()
-
-print("NOWALL DESATIVADO")
+-- ✅ EXECUTAR
+teleportToNewServer()
