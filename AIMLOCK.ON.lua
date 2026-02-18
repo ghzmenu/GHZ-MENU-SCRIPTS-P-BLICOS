@@ -45,7 +45,7 @@ end
 destroyExistingAimbot()
 
 _G.AimlockActive = true
-_G.AimlockFOV = 55
+_G.AimlockFOV = 65
 _G.AimlockConn = nil
 _G.FOVOffsetY = -55
 _G.AimlockStrength = 0.15
