@@ -1,161 +1,133 @@
--- STAFF LIST ON: Interface com título, nome e distância em RGB animado
+-- CONFIGURAÇÃO FÁCIL: ajuste aqui!
+local LIST_WIDTH = 450     -- largura da lista (pixels)
+local LIST_HEIGHT = 300    -- altura da lista (pixels)
+local LIST_BORDER_COLOR = Color3.fromRGB(150, 0, 255)
+local LIST_BG_COLOR = Color3.fromRGB(0, 0, 0)
 
+-----------------
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local Teams = game:GetService("Teams")
+local player = Players.LocalPlayer
 
--- Cleanup anterior
-if _G._StaffListGui then pcall(function() _G._StaffListGui:Destroy() end) end
-if _G._StaffList_Con then pcall(function() _G._StaffList_Con:Disconnect() end) end
-if _G._StaffList_DragCon then pcall(function() _G._StaffList_DragCon:Disconnect() end) end
+-- Cria/pega ScreenGui (único)
+local screenGui = player.PlayerGui:FindFirstChild("StaffListESP") or Instance.new("ScreenGui")
+screenGui.Name = "StaffListESP"
+screenGui.Parent = player.PlayerGui
 
--- Função para RGB animado
-local function getRGBColor(offset)
-    local t = tick() + (offset or 0)
-    return Color3.fromHSV((t%5)/5, 1, 1)
-end
+-- Remove lista antiga, se houver
+for _, v in pairs(screenGui:GetChildren()) do v:Destroy() end
 
-local function isStaff(player)
-    if not player.Team or not player.Team.Name then return false end
-    local t = player.Team.Name
-    return t == "STAFF" or t == "BIB | STAFF"
-end
-
-local function getStaffPlayers()
-    local list = {}
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and isStaff(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            table.insert(list, plr)
-        end
-    end
-    return list
-end
-
--- GUI Setup
-local gui = Instance.new("ScreenGui")
-gui.Name = "StaffListGUI"
-gui.Parent = game.CoreGui
-_G._StaffListGui = gui
-
+-- Frame principal (a "box" da lista)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 500/3, 0, 220/3)
-mainFrame.Position = UDim2.new(0.5, -500/6, 0.15, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(32,32,32)
+mainFrame.Size = UDim2.new(0, LIST_WIDTH, 0, LIST_HEIGHT)
+mainFrame.Position = UDim2.new(0.5, -LIST_WIDTH/2, 0.17, 0)
+mainFrame.BackgroundColor3 = LIST_BG_COLOR
+mainFrame.BorderSizePixel = 0
+mainFrame.AnchorPoint = Vector2.new(0.5, 0)
+mainFrame.Parent = screenGui
 mainFrame.BackgroundTransparency = 0
-mainFrame.Parent = gui
-mainFrame.Active = true
+mainFrame.ClipsDescendants = true
 
+-- Borda roxa com UICorner + UIStroke
 local uicorner = Instance.new("UICorner")
-uicorner.CornerRadius = UDim.new(0,40/3)
+uicorner.CornerRadius = UDim.new(0, 28)
 uicorner.Parent = mainFrame
 
--- Title bar (barra escura, agora com rgb no texto)
-local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 60/3)
-titleBar.Position = UDim2.new(0, 0, 0, 0)
-titleBar.BackgroundColor3 = Color3.fromRGB(0,0,0)
-titleBar.BackgroundTransparency = 0
-titleBar.Parent = mainFrame
-titleBar.Active = true
+local uistroke = Instance.new("UIStroke")
+uistroke.Thickness = 3
+uistroke.Color = LIST_BORDER_COLOR
+uistroke.Parent = mainFrame
 
-local titleUICorner = Instance.new("UICorner")
-titleUICorner.CornerRadius = UDim.new(0,40/3)
-titleUICorner.Parent = titleBar
+-- Título STAFF LIST
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 54)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 38
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Text = "STAFF LIST"
+title.TextStrokeTransparency = 0.18
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextYAlignment = Enum.TextYAlignment.Center
+title.Parent = mainFrame
 
-local titleLbl = Instance.new("TextLabel")
-titleLbl.Name = "StaffTitle"
-titleLbl.Text = "STAFF LIST"
-titleLbl.Size = UDim2.new(1, 0, 1, 0)
-titleLbl.BackgroundTransparency = 1
-titleLbl.Font = Enum.Font.GothamBlack
-titleLbl.TextSize = 54/3
-titleLbl.TextColor3 = Color3.fromRGB(255,255,255)
-titleLbl.TextXAlignment = Enum.TextXAlignment.Center
-titleLbl.TextYAlignment = Enum.TextYAlignment.Center
-titleLbl.Parent = titleBar
-titleLbl.RichText = true -- Ativa richtext
+-- Linha horizontal (branca)
+local line = Instance.new("Frame")
+line.Size = UDim2.new(0.94, 0, 0, 2)
+line.Position = UDim2.new(0.03, 0, 0, 54)
+line.BackgroundColor3 = Color3.new(1, 1, 1)
+line.BorderSizePixel = 0
+line.Parent = mainFrame
 
--- Lista dos staffs
-local listStartY = 70/3
-local lineHeight = 45/3
-local maxLines = 3
-local staffLines = {}
+-- Container para os nomes
+local listContainer = Instance.new("Frame")
+listContainer.Size = UDim2.new(1, 0, 1, -58)
+listContainer.Position = UDim2.new(0, 0, 0, 58)
+listContainer.BackgroundTransparency = 1
+listContainer.Parent = mainFrame
 
-for i = 1, maxLines do
-    local label = Instance.new("TextLabel")
-    label.Name = "StaffLine" .. i
-    label.BackgroundTransparency = 1
-    label.Position = UDim2.new(0, 20/3, 0, listStartY + (i-1)*lineHeight)
-    label.Size = UDim2.new(1, -40/3, 0, lineHeight)
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 28/3
-    label.TextColor3 = Color3.fromRGB(255,255,255)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Text = ""
-    label.Parent = mainFrame
-    label.RichText = true -- Ativa richtext
-    staffLines[i] = label
+-- Layout vertical
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 10)
+layout.FillDirection = Enum.FillDirection.Vertical
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = listContainer
+
+-- Função para cor RGB animada
+local function getRGBColor()
+    local t = tick()
+    local r = math.abs(math.sin(t * 1.4))
+    local g = math.abs(math.sin(t * 1.8 + 2))
+    local b = math.abs(math.sin(t * 2.2 + 4))
+    return Color3.new(r, g, b)
 end
 
--- DRAG & DROP MOUSE + TOUCH SOMENTE PELA BARRA
-local dragging = false
-local dragStart, startPos
+-- Função para atualizar a lista dos STAFFs
+local function updateStaffList()
+    -- Remove nomes antigos
+    for _, obj in pairs(listContainer:GetChildren()) do
+        if obj:IsA("TextLabel") then obj:Destroy() end
+    end
 
-local function beginDrag(input)
-    dragging = true
-    dragStart = input.Position
-    startPos = mainFrame.Position
-    input.Changed:Connect(function()
-        if input.UserInputState == Enum.UserInputState.End then
-            dragging = false
+    local staffPlayers = {}
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr.Team and plr.Team.Name == "STAFF" and plr.Character and plr.Character:FindFirstChild("Head") then
+            table.insert(staffPlayers, plr)
         end
-    end)
+    end
+
+    for _, staff in ipairs(staffPlayers) do
+        local dist = 0
+        if player.Character and player.Character:FindFirstChild("Head") and staff.Character and staff.Character:FindFirstChild("Head") then
+            dist = (player.Character.Head.Position - staff.Character.Head.Position).Magnitude
+        end
+
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Size = UDim2.new(0.97, 0, 0, 38)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Font = Enum.Font.SourceSansBold
+        nameLabel.TextSize = 30
+        nameLabel.TextColor3 = getRGBColor()
+        nameLabel.TextStrokeTransparency = 0.14
+        nameLabel.Text = string.upper(staff.Name) .. string.format(" [ %.0fM ]", dist)
+        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        nameLabel.Parent = listContainer
+
+        -- Animar RGB nos nomes
+        game:GetService("RunService").RenderStepped:Connect(function()
+            nameLabel.TextColor3 = getRGBColor()
+            -- Atualiza distância em tempo real
+            if player.Character and player.Character:FindFirstChild("Head") and staff.Character and staff.Character:FindFirstChild("Head") then
+                local dist2 = (player.Character.Head.Position - staff.Character.Head.Position).Magnitude
+                nameLabel.Text = string.upper(staff.Name) .. string.format(" [ %.0fM ]", dist2)
+            end
+        end)
+    end
 end
 
-titleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        beginDrag(input)
-    end
-end)
+-- Atualiza lista periodicamente
+_G.StaffListESPConn = game:GetService("RunService").RenderStepped:Connect(updateStaffList)
 
-_G._StaffList_DragCon = UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
--- Atualização dinâmica da lista e RGB
-_G._StaffList_Con = RunService.RenderStepped:Connect(function()
-    -- Atualiza cor RGB do título animado
-    local rgbTitle = getRGBColor(0)
-    titleLbl.Text = ("<font color=\"rgb(%d,%d,%d)\">STAFF LIST</font>")
-        :format(math.floor(rgbTitle.R*255), math.floor(rgbTitle.G*255), math.floor(rgbTitle.B*255))
-
-    local staffList = getStaffPlayers()
-    for i = 1, maxLines do
-        local line = staffLines[i]
-        local plr = staffList[i]
-        if plr then
-            local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-            local dist = hrp and (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart"))
-                and math.floor((LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude) or "?"
-            -- RGB para nome e distância
-            local rgbName = getRGBColor(i*0.25)
-            local rgbDist = getRGBColor(i*0.5)
-            line.Text = ("<font color=\"rgb(%d,%d,%d)\">%s</font> [ <font color=\"rgb(%d,%d,%d)\">%s m</font> ]")
-                :format(
-                    math.floor(rgbName.R*255), math.floor(rgbName.G*255), math.floor(rgbName.B*255), plr.Name,
-                    math.floor(rgbDist.R*255), math.floor(rgbDist.G*255), math.floor(rgbDist.B*255), dist
-                )
-            line.Visible = true
-        else
-            line.Text = ""
-            line.Visible = false
-        end
-    end
-end)
+print("STAFF LIST ESP ativado. Para mudar o tamanho, edite LIST_WIDTH ou LIST_HEIGHT. Para desativar, rode o script abaixo.")
