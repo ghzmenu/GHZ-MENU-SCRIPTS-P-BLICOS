@@ -1,10 +1,18 @@
-local player = game:GetService("Players").LocalPlayer
-local gui = player.PlayerGui:FindFirstChild("StaffListESP")
-if gui then gui:Destroy() end
+-- Remove a Interface STAFF LIST e desconecta os eventos
 
-if _G.StaffListESPConn then
-    _G.StaffListESPConn:Disconnect()
-    _G.StaffListESPConn = nil
+if _G._StaffListGui then
+    pcall(function() _G._StaffListGui:Destroy() end)
+    _G._StaffListGui = nil
 end
 
-print("STAFF LIST ESP desativado!")
+if _G._StaffList_Con then
+    pcall(function() _G._StaffList_Con:Disconnect() end)
+    _G._StaffList_Con = nil
+end
+
+if _G._StaffList_DragCon then
+    pcall(function() _G._StaffList_DragCon:Disconnect() end)
+    _G._StaffList_DragCon = nil
+end
+
+print("STAFF LIST desativada e removida!")
