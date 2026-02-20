@@ -1,4 +1,10 @@
--- STAFF LIST OFF: Remove a lista e desconecta atualização
+local player = game:GetService("Players").LocalPlayer
+local gui = player.PlayerGui:FindFirstChild("StaffListESP")
+if gui then gui:Destroy() end
 
-if _G._StaffList_Con then pcall(function() _G._StaffList_Con:Disconnect() end) _G._StaffList_Con = nil end
-if _G._StaffListGui then pcall(function() _G._StaffListGui:Destroy() end) _G._StaffListGui = nil end
+if _G.StaffListESPConn then
+    _G.StaffListESPConn:Disconnect()
+    _G.StaffListESPConn = nil
+end
+
+print("STAFF LIST ESP desativado!")
